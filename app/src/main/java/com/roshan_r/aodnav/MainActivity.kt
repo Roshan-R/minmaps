@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
             val directionHelpText = intent.getStringExtra("directionHelpText") ?: "No Text"
             val icon: Icon? = intent.getParcelableExtra("icon")
 
-            val image = icon!!.loadDrawable(context)?.let { Utils.convertIconToBitmap(context, it) }
+            val image = icon?.loadDrawable(context)?.let { Utils.convertIconToBitmap(context, it) }
 
             aodViewmodel.setAodState(
                 RouteInfo(

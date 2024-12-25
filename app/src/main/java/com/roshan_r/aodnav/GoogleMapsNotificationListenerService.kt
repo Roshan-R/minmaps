@@ -6,66 +6,92 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 
-fun getIntentFromNotification(sbn: StatusBarNotification): Intent? {
-    val intent = Intent("com.roshan-r.AODNav")
-
-    if (sbn.notification.extras.getString("android.subText") != null){
-        val subText = sbn.notification.extras.getString("android.subText").toString()
-        val splitInfo = subText.split(" · ")
-
-        if (splitInfo.size != 3){
-            Log.d("UniqueNotification", sbn.notification.extras.toString())
-            return null
-        }
-
-        val totalTime = splitInfo[0].trim() // "5 hr 58 min"
-        val distanceToDestination = splitInfo[1].trim() // "215 km"
-        val estimatedTimeOfArrival = splitInfo[2].split(" ETA")[0].trim() // "10:30 pm"
-
-        intent.putExtra("totalTime", totalTime)
-        intent.putExtra("distanceToDestination", distanceToDestination)
-        intent.putExtra("estimatedTimeOfArrival", estimatedTimeOfArrival)
-    }
-
-    val distanceToNextTurn = sbn.notification.extras.getCharSequence("android.title")?.toString()
-    val directionHelpText = sbn.notification.extras.getCharSequence("android.text")?.toString() // Head South
-    val icon = sbn.notification.extras.getParcelable<Icon>("android.largeIcon")
-
-    intent.putExtra("distanceToNextTurn", distanceToNextTurn)
-    intent.putExtra("directionHelpText", directionHelpText)
-    intent.putExtra("icon", icon)
-
-    return intent
-}
-
 class GoogleMapsNotificationListenerService : NotificationListenerService() {
 
-    override fun onNotificationPosted(sbn: StatusBarNotification) {
-        if (sbn.packageName.isNotEmpty() && sbn.packageName == "com.google.android.apps.maps") {
-            Log.d("NotificationService", sbn.notification.extras.toString())
-            val intent = getIntentFromNotification(sbn = sbn)
-            sendBroadcast(intent)
-        }
+    companion object {
+        private const val TAG = "GoogleMapsNotification"
+        private const val MAPS_PACKAGE_NAME = "com.google.android.apps.maps"
+        private const val BROADCAST_ACTION = "com.roshan-r.AODNav"
     }
 
-    override fun onListenerConnected(){
-        Log.d("Listened", "THE LISTENER IS CONNECTED!!")
-        val notifications = getActiveNotifications().filter { it.packageName == "com.google.android.apps.maps" }
-        if (notifications.isNotEmpty()){
-            val intent = getIntentFromNotification(sbn = notifications[0])
-            if (intent != null){
+    /**
+     * Extracts information from a Google Maps notification and creates an intent.
+     *
+     * @param sbn The notification to process.
+     * @return An Intent with extracted data, or null if data is incomplete.
+     */
+    private fun getIntentFromNotification(sbn: StatusBarNotification): Intent? {
+        val intent = Intent(BROADCAST_ACTION)
+
+        // Extract additional data from notification
+        val subText = sbn.notification.extras.getString("android.subText")
+        if (subText == null) {
+            Log.d(TAG, "Unexpected subText format: $subText")
+            return null // Exit early if subText format is invalid
+
+        }
+
+        val splitInfo = subText.split(" · ")
+        if (splitInfo.size == 3) {
+            intent.putExtra("totalTime", splitInfo[0].trim())
+            intent.putExtra("distanceToDestination", splitInfo[1].trim())
+            intent.putExtra("estimatedTimeOfArrival", splitInfo[2].split(" ETA")[0].trim())
+        }
+
+        // Extract distance to next turn, direction help text, and icon
+        val distanceToNextTurn =
+            sbn.notification.extras.getCharSequence("android.title")?.toString()
+        val directionHelpText = sbn.notification.extras.getCharSequence("android.text")?.toString()
+        val icon = sbn.notification.extras.getParcelable<Icon>("android.largeIcon")
+        if (icon != null){
+            intent.putExtra("icon", icon)
+        }
+
+        // Add extracted data to the intent
+        if (distanceToNextTurn != null) intent.putExtra("distanceToNextTurn", distanceToNextTurn)
+        if (directionHelpText != null) intent.putExtra("directionHelpText", directionHelpText)
+        return intent
+    }
+
+    override fun onNotificationPosted(sbn: StatusBarNotification) {
+        // Check if the notification belongs to Google Maps
+        if (sbn.packageName == MAPS_PACKAGE_NAME) {
+            Log.d(TAG, "Notification received: ${sbn.notification.extras}")
+            val intent = getIntentFromNotification(sbn)
+            if (intent != null) {
                 sendBroadcast(intent)
             }
         }
-        else{
-            val intent = Intent("com.roshan-r.AODNav")
-            intent.putExtra("no.maps", "True")
-            sendBroadcast(intent)
+    }
+
+    override fun onListenerConnected() {
+        Log.d(TAG, "Notification Listener Connected")
+
+        // Get active notifications from Google Maps
+        val activeNotifications = activeNotifications
+        var hasActiveMapsNotification = false
+
+        for (sbn in activeNotifications) {
+            if (sbn.packageName == MAPS_PACKAGE_NAME) {
+                hasActiveMapsNotification = true
+                val intent = getIntentFromNotification(sbn)
+                if (intent != null) {
+                    sendBroadcast(intent)
+                }
+                break // Process the first relevant notification only
+            }
+        }
+
+        // If no active Google Maps notifications, send a default intent
+        if (!hasActiveMapsNotification) {
+            val noMapsIntent = Intent(BROADCAST_ACTION)
+            noMapsIntent.putExtra("no.maps", true)
+            sendBroadcast(noMapsIntent)
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("NotificationListener", "Service Created")
+        Log.d(TAG, "Notification Listener Service Created")
     }
 }
