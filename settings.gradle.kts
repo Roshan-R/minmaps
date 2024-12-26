@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AODNav"
+rootProject.name = "minmaps"
 include(":app")

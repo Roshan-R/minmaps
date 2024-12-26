@@ -1,7 +1,8 @@
-package com.roshan_r.aodnav.stateholders.screen
+package com.roshan_r.minmaps.stateholders.screen
 
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -38,10 +40,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.roshan_r.aodnav.MainActivity
-import com.roshan_r.aodnav.models.RouteInfo
-import com.roshan_r.aodnav.models.ScreenState
-import com.roshan_r.aodnav.stateholders.viewmodel.AodViewmodel
+import com.roshan_r.minmaps.MainActivity
+import com.roshan_r.minmaps.models.RouteInfo
+import com.roshan_r.minmaps.models.ScreenState
+import com.roshan_r.minmaps.stateholders.viewmodel.MinMapsViewmodel
 
 
 fun openGoogleMaps(context: Context, tryMiniView: Boolean) {
@@ -63,7 +65,7 @@ fun openGoogleMaps(context: Context, tryMiniView: Boolean) {
 }
 
 @Composable
-fun AodHomeScreen(viewmodel: AodViewmodel) {
+fun HomeScreen(viewmodel: MinMapsViewmodel) {
     val uiState = viewmodel.uiState
 
     AnimatedContent(targetState = uiState.state,
@@ -73,15 +75,53 @@ fun AodHomeScreen(viewmodel: AodViewmodel) {
             fadeIn() togetherWith fadeOut()
         }) {
         when (it) {
-            ScreenState.Loading -> AodLoadingState()
-            ScreenState.Error -> AodErrorState()
-            ScreenState.Success -> AodScreenNavigation(uiState.aodState)
+            ScreenState.Loading -> LoadingState()
+            ScreenState.Error -> ErrorState()
+            ScreenState.Navigation -> NavigationState(uiState.minMapsState)
+            ScreenState.RequestPermission -> PermissionRequestState()
         }
     }
 }
 
 @Composable
-fun AodErrorState() {
+fun PermissionRequestState() {
+    val context = LocalContext.current
+    Surface {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .padding(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+
+        ) {
+            Text(
+                "MinMaps uses the data from Google Maps notifications when it is in navigation mode. " +
+                        "To ensure the app functions correctly, please enable notification access for MinMaps.",
+                fontSize = TextUnit(4.3F, TextUnitType.Em)
+            )
+            Spacer(modifier = Modifier.size(21.dp))
+
+            Text(
+                "In the next screen, tap 'Allow Notification Access' for MinMaps to proceed.",
+                fontSize = TextUnit(4.3F, TextUnitType.Em)
+            )
+            Spacer(modifier = Modifier.size(21.dp))
+            Button(onClick = {
+                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                context.startActivity(intent)
+
+            }) {
+                Text("Click here to request permission")
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ErrorState() {
     val context = LocalContext.current
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -91,10 +131,10 @@ fun AodErrorState() {
                 .fillMaxHeight()
                 .padding(40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "AODNav needs Google Maps to be in navigation mode to work. Please start a navigation and come back.",
+                "MinMaps needs Google Maps to be in navigation mode to work. Please start a navigation and come back.",
                 fontSize = TextUnit(4.3F, TextUnitType.Em)
             )
             Spacer(Modifier.height(16.dp))
@@ -107,7 +147,7 @@ fun AodErrorState() {
 }
 
 @Composable
-fun AodLoadingState() {
+fun LoadingState() {
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -135,7 +175,7 @@ fun AodLoadingState() {
 
 
 @Composable
-fun AodScreenNavigation(state: RouteInfo) {
+fun NavigationState(state: RouteInfo) {
 
     Surface(color = Color.Black, modifier = Modifier.fillMaxSize()) {
         Column(

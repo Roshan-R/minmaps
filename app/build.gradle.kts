@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.roshan_r.aodnav"
+    namespace = "com.roshan_r.minmaps"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.roshan_r.aodnav"
+        applicationId = "com.roshan_r.minmaps"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

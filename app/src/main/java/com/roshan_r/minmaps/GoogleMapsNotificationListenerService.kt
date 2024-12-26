@@ -1,4 +1,4 @@
-package com.roshan_r.aodnav
+package com.roshan_r.minmaps
 
 import android.content.Intent
 import android.graphics.drawable.Icon
@@ -11,7 +11,7 @@ class GoogleMapsNotificationListenerService : NotificationListenerService() {
     companion object {
         private const val TAG = "GoogleMapsNotification"
         private const val MAPS_PACKAGE_NAME = "com.google.android.apps.maps"
-        private const val BROADCAST_ACTION = "com.roshan-r.AODNav"
+        private const val BROADCAST_ACTION = "com.roshan-r.MinMaps"
     }
 
     /**
@@ -43,7 +43,7 @@ class GoogleMapsNotificationListenerService : NotificationListenerService() {
             sbn.notification.extras.getCharSequence("android.title")?.toString()
         val directionHelpText = sbn.notification.extras.getCharSequence("android.text")?.toString()
         val icon = sbn.notification.extras.getParcelable<Icon>("android.largeIcon")
-        if (icon != null){
+        if (icon != null) {
             intent.putExtra("icon", icon)
         }
 
@@ -69,25 +69,21 @@ class GoogleMapsNotificationListenerService : NotificationListenerService() {
 
         // Get active notifications from Google Maps
         val activeNotifications = activeNotifications
-        var hasActiveMapsNotification = false
 
         for (sbn in activeNotifications) {
             if (sbn.packageName == MAPS_PACKAGE_NAME) {
-                hasActiveMapsNotification = true
                 val intent = getIntentFromNotification(sbn)
                 if (intent != null) {
                     sendBroadcast(intent)
                 }
-                break // Process the first relevant notification only
+                return // Process the first relevant notification only
             }
         }
 
         // If no active Google Maps notifications, send a default intent
-        if (!hasActiveMapsNotification) {
-            val noMapsIntent = Intent(BROADCAST_ACTION)
-            noMapsIntent.putExtra("no.maps", true)
-            sendBroadcast(noMapsIntent)
-        }
+        val noMapsIntent = Intent(BROADCAST_ACTION)
+        noMapsIntent.putExtra("no.maps", "true")
+        sendBroadcast(noMapsIntent)
     }
 
     override fun onCreate() {

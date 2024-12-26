@@ -1,4 +1,4 @@
-package com.roshan_r.aodnav.models
+package com.roshan_r.minmaps.models
 
 import android.graphics.Bitmap
 

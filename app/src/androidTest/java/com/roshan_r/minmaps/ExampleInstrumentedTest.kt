@@ -1,4 +1,4 @@
-package com.roshan_r.aodnav
+package com.roshan_r.minmaps
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.roshan_r.aodnav", appContext.packageName)
+        assertEquals("com.roshan_r.minmaps", appContext.packageName)
     }
 }

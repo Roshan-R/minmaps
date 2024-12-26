@@ -1,4 +1,4 @@
-package com.roshan_r.aodnav.ui.theme
+package com.roshan_r.minmaps.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

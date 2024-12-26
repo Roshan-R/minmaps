@@ -1,4 +1,4 @@
-package com.roshan_r.aodnav
+package com.roshan_r.minmaps
 
 import android.content.Context
 import android.graphics.Bitmap
